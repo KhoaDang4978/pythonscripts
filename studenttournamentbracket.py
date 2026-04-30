@@ -1,4 +1,4 @@
-# This is a complete tournament bracket with multi-round elimination and tiebreaker logic.
+# This is a student tournament bracket
 print("Welcome to the student tournament bracket")
 print("-----------------------------------------")
 import random
