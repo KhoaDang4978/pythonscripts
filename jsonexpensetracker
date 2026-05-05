@@ -1,0 +1,80 @@
+# This is a JSON expense tracker
+print("Welcome to the expense tracker!")
+print("-------------------------------")
+import datetime
+import random
+total_income = 0
+total_expense = 0
+class Transaction:
+    def __init__(self, date, type, category, amount, description, id):
+        self.date = date
+        self.type = type
+        self.category = category
+        self.amount = amount
+        self.description = description
+        self.id = id
+import json
+import os
+transactions = []
+if os.path.exists("expense.json"):
+    with open("expense.json") as f:
+        items = json.load(f)
+while True:
+    operation = str(input("Please choose your operation (add transaction, view all transaction, view by category, " \
+    "view monthly summary, delete a transaction): "))
+    if operation == "add transaction":
+        date = str(datetime.date.today())
+        type = str(input("Which type of transaction is this? (income/expense) "))
+        category = str(input("What category does this transaction belong to? "))
+        amount = str(input("Please input amount: $"))
+        description = input("Please write a short description: ")
+        id = str(random.randint(10000, 99999))
+        t = Transaction(date, type, category, amount, description, id)
+        transactions.append({
+            "date": t.date,
+            "type": t.type,
+            "category": t.category,
+            "amount": t.amount,
+            "description": t.description,
+            "id": t.id
+        })
+        with open("expense.json", "w") as f:
+            json.dump(transactions, f)
+        print("Transaction completed!")
+        print(f"Your transaction ID is: {id}")
+    elif operation == "view all transaction":
+        for transaction in transactions:
+            print(f"{transaction[date]} - {transaction[type]} - {transaction[category]} - ${transaction[amount]} - {transaction[description]} - ID: {transaction[id]}")
+    elif operation == "view by category":
+        category = str(input("What category do you want to look at? "))
+        for transaction in transactions:
+            if (transaction["category"]) == category:
+                print(f"{transaction[date]} - {transaction[type]} - {transaction[category]} - ${transaction[amount]} - {transaction[description]} - ID: {transaction[id]}")
+    elif operation == "view monthly summary":
+        month = input("Enter month (YYYY-MM): ")
+        monthly_transactions = [t for t in transactions if t["date"].startswith(month)]
+        print(f"Found {len(monthly_transactions)} transactions for {month}")
+        for transaction in monthly_transactions:
+            print(f"{transaction[date]} - {transaction[type]} - {transaction[category]} - ${transaction[amount]} - {transaction[description]} - ID: {transaction[id]}")
+        for t in monthly_transactions:
+            amount = float(t["amount"])
+            if t["type"] == "income":
+                total_income += amount
+            elif t["type"] == "expense":
+                total_expense += amount
+        print(f"Total income: ${total_income}")
+        print(f"Total expense: ${total_expense}")
+        net_balance = total_income - total_expense
+        print(f"Your net balance is: ${net_balance}")
+    elif operation == "delete a transaction":
+        idd = input("Enter transaction ID: ")
+        for transaction in transactions:
+            if (transaction["id"]) == idd:
+                transactions.remove(transaction)
+                with open("expense.json", "w") as f:
+                    json.dump(transactions, f)
+                print("Transaction deleted.")
+            else:
+                print("Transaction not found. try again!")
+    else:
+        print("Invalid operation. Try again.")
