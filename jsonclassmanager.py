@@ -61,6 +61,8 @@ while True:
             if (student['name']) == name:
                 found = True
                 print(f"{student['name']}'s report card: ")
+                for entry in student["grades_per_subject"]:
+                    print(f"  {entry['subject']}: {entry['grade']}")
                 avg = get_average(student)
                 print(f"Student's average: {avg:.1f}")
         if not found:
@@ -73,5 +75,7 @@ while True:
         for student in students:
             if get_average(student) < 50:
                 print(f"AT RISK: {student['name']}")
+    elif operation == "exit":
+        break
     else:
         print("Invalid operation. Try again.")
