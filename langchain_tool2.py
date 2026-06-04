@@ -9,20 +9,41 @@ def get_ticket_price(route: str, seat_type: str) -> str:
     """Get the ticket price for a Vie Limo destination and seat type.
     
     Args:
-        route: The destination only (e.g., 'vung tau', 'mui ne', 'ho tram')
-        seat_type: The seat type - either 'a' or 'b'
+        route: Destination only. Valid options: 'vung tau', 'mui ne', 'ho tram'
+        seat_type: Seat tier. Valid options: 'a' (premium), 'b' (standard)
+    
+    Returns:
+        Price as string, or error message explaining what went wrong.
     """
-    with open("vielimo_data.json") as f:
-        data = json.load(f)
-
-    key = f"{route.lower()}_{seat_type.lower()}"
-    print(f"Debug — route: '{route}', seat_type: '{seat_type}'")
-    print(f"Debug — looking up key: {key}")
-    return data.get(key, "Price not found.")
+    try:
+        with open("vielimo_data.json") as f:
+            data = json.load(f)
+        
+        key = f"{route.lower()}_{seat_type.lower()}"
+        price = data.get(key)
+        
+        if not price:
+            available = [k.replace("_", " → seat ") for k in data.keys()]
+            return f"No price found for {route} seat {seat_type}. Available routes: {', '.join(available)}"
+        
+        return f"Ticket price for {route} (Seat {seat_type.upper()}): {price}"
+    
+    except FileNotFoundError:
+        return "Pricing data unavailable. Please contact support."
+    except Exception as e:
+        return f"Error retrieving price: {str(e)}"
 
 @tool
 def get_travel_time(route: str, pickup: str) -> str:
-    """Get the travel time for a Vie Limo route and pickup point."""
+    """Get the travel time for a Vie Limo route and pickup point.
+       
+    Args: 
+       route: Destination only. Valid options: 'vung tau', 'mui ne', 'ho tram'
+       pickup: Pick-up location. Valid options: 'district 1', 'airport'
+
+    Returns:
+        Times as strings, or error message explaining what went wrong.
+    """
     times = {
         ("vung tau", "district 1"): "2 hours 15 minutes",
         ("vung tau", "airport"): "3 hours",
@@ -31,8 +52,19 @@ def get_travel_time(route: str, pickup: str) -> str:
         ("ho tram", "district 1"): "2 hours 30-45 minutes",
         ("ho tram", "airport"): "3 hours 15 minutes",
     }
-    key = (route.lower(), pickup.lower())
-    return times.get(key, "Travel time not available for this route.")
+
+    try: 
+        key = (route.lower(), pickup.lower())
+        time = times.get(key)
+
+        if not time:
+            available = [f"{r} from {p}" for r, p in times.keys()]
+            return f"No travel time found for {route} from {pickup}. Available: {', '.join(available)}"
+
+        return f"Travel time from {pickup} to {route}: {time}"
+    
+    except Exception as e:
+        return f"Error retrieving travel time: {str(e)}"
 
 @tool
 def recommend_destination(budget: int, trip_length: str) -> str:
@@ -40,6 +72,8 @@ def recommend_destination(budget: int, trip_length: str) -> str:
     Args:
         budget: Budget per person in VND
         trip_length: Either 'day trip' or 'weekend'
+    Returns:
+        Recommendation in strings, or error message explaining what went wrong.
     """
     destinations = [
         {"name": "Vung Tau", "seat_a": 270000, "seat_b": 230000, "description": "Closest beach, great for day trips"},
@@ -47,15 +81,19 @@ def recommend_destination(budget: int, trip_length: str) -> str:
         {"name": "Mui Ne", "seat_a": 420000, "seat_b": 360000, "description": "Sand dunes and beaches, best for weekends"},
     ]
     
-    affordable = [d for d in destinations if d["seat_b"] <= budget]
+    try:
+        affordable = [d for d in destinations if d["seat_b"] <= budget]
     
-    if not affordable:
-        return "No destinations found within your budget."
+        if not affordable:
+            return "No destinations found within your budget."
     
-    result = "Recommended destinations within your budget:\n"
-    for d in affordable:
-        result += f"- {d['name']}: from {d['seat_b']:,} VND ({d['description']})\n"
-    return result
+        result = "Recommended destinations within your budget:\n"
+        for d in affordable:
+            result += f"- {d['name']}: from {d['seat_b']:,} VND ({d['description']})\n"
+        return result
+
+    except Exception as e:
+        return f"Error generating recommendation: {str(e)}"
 
 
 
@@ -121,9 +159,9 @@ agent = create_agent(
 
     Our standard ticket pricing for this route is as follows:
 
-    Standard Massage Seats: 230,000 VND per ticket
+    Standard Seats: 230,000 VND per ticket
 
-    VIP Sky-View Massage Seats: 270,000 VND per ticket
+    VIP Massage Seats: 270,000 VND per ticket
 
     All tickets include complimentary Wi-Fi, charging ports, bottled water, and a fully personalized massage function built into your seat to ensure you arrive completely relaxed.
 
